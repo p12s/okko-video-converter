@@ -1,0 +1,4 @@
+certbot_email: mail@convert.p12s.online
+certbot_hosts:
+    - convert.p12s.online
+    - api-video.convert.p12s.online

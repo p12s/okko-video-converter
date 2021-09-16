@@ -1,0 +1,70 @@
+-   name: Update the apt package index #- на Floops возникли проблемы, зашел и выполнил вручную
+    become: yes
+    apt:
+        name: "*"
+        state: latest
+        update_cache: yes
+        force_apt_get: yes
+
+-   name: Install dependencies
+    become: yes
+    apt:
+        name:
+            - apt-transport-https
+            - ca-certificates
+            - curl
+            - software-properties-common
+            - gnupg2
+            - lsb-release
+            - python3-pip
+            - virtualenv
+            - python3-setuptools
+        state: present
+        update_cache: yes
+
+-   name: Add GPG key
+    become: yes
+    apt_key:
+        url: https://download.docker.com/linux/debian/gpg
+        state: present
+# curl -fsSL  | sudo apt-key add -
+#    curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+-   name: Verify fingerprint
+    apt_key:
+        id: 0EBFCD88
+        state: present
+
+-   name: Set up the repository
+    become: yes
+    apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/debian stretch stable
+        state: present
+        filename: docker
+        update_cache: yes
+
+-   name: Install Docker
+    become: yes
+    apt:
+        name: docker-ce
+        state: present
+        update_cache: yes
+    notify: Start docker on boot
+
+-   name: Set periodic Docker prune
+    become: yes
+    cron:
+        name: docker-prune
+        job: 'docker system prune -af --filter "until=$((30*24))h"'
+        minute: '0'
+        hour: '1'
+
+-   name: Remove useless packages
+    become: yes
+    apt:
+        autoclean: yes
+
+-   name: Remove useless dependencies
+    become: yes
+    apt:
+        autoremove: yes

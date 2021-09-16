@@ -1,0 +1,97 @@
+version: "3.8"
+services:
+    gateway:
+        image: ${REGISTRY}/${LOGIN}/video-converter:gateway-${IMAGE_TAG}
+        volumes:
+            - /var/www/html:/var/www/html:ro
+        ports:
+            - "80:80"
+            - "8080:8080"
+            - "8081:8081"
+        deploy:
+            mode: replicated
+            replicas: 1
+            update_config:
+                parallelism: 1
+                delay: 10s
+            placement:
+                constraints: [node.role == manager]
+
+    frontend:
+        image: ${REGISTRY}/${LOGIN}/video-converter:frontend-${IMAGE_TAG}
+        deploy:
+            mode: replicated
+            replicas: 1
+            update_config:
+                parallelism: 1
+                delay: 10s
+
+    api:
+        image: ${REGISTRY}/${LOGIN}/video-converter:api-${IMAGE_TAG}
+        environment:
+            APP_ENV: dev
+            APP_DEBUG: 1
+            API_PORT: 8081
+            POSTGRES_HOST: /run/secrets/postgres_host
+            POSTGRES_PASSWORD: /run/secrets/postgres_password
+            POSTGRES_PORT: 5432
+            POSTGRES_USER: /run/secrets/postgres_user
+            POSTGRES_DB: /run/secrets/postgres_db
+            POSTGRES_SSL_MODE: disable
+            PGDATA: /var/lib/postgresql/data
+            GIN_MODE: release
+        volumes:
+            - ./secrets/development:/run/secrets:ro
+            - files:/files
+        deploy:
+            mode: replicated
+            replicas: 1
+            update_config:
+                parallelism: 1
+                delay: 5s
+        secrets:
+            - postgres_password
+            - postgres_user
+            - postgres_db
+            - postgres_host
+
+    db:
+        image: ${REGISTRY}/${LOGIN}/video-converter:db-${IMAGE_TAG}
+        environment:
+            POSTGRES_PASSWORD: /run/secrets/postgres_password
+            POSTGRES_USER: /run/secrets/postgres_user
+            POSTGRES_DB: /run/secrets/postgres_db
+        volumes:
+            - ./.database/postgres/data:/var/lib/postgresql/data
+        ports:
+            - "5432:5432"
+        deploy:
+            mode: replicated
+            replicas: 1
+            update_config:
+                parallelism: 1
+                delay: 5s
+            restart_policy:
+                condition: on-failure
+                delay: 5s
+                max_attempts: 5
+                window: 120s
+            placement:
+                constraints: [node.role == manager]
+        secrets:
+            - postgres_password
+            - postgres_user
+            - postgres_db
+
+volumes:
+    files:
+
+secrets:
+    postgres_password:
+        file: ./secrets/development/postgres_password
+    postgres_user:
+        file: ./secrets/development/postgres_user
+    postgres_db:
+        file: ./secrets/development/postgres_db
+    postgres_host:
+        file: ./secrets/development/postgres_host

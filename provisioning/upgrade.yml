@@ -1,0 +1,25 @@
+---
+-   name: Upgrade
+    hosts: swarm-manager
+    remote_user: ubuntu
+    tasks:
+        -   name: Update APT package cache
+            become: yes
+            apt:
+                update_cache: yes
+
+        -   name: Upgrade APT to the latest packages
+            become: yes
+            apt:
+                upgrade: dist
+
+        -   name: Remove useless packages
+            become: yes
+            apt:
+                autoclean: yes
+
+        -   name: Remove useless dependencies
+            become: yes
+            apt:
+                autoremove: yes
+

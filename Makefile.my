@@ -1,0 +1,29 @@
+==== DEV with docker-swarm
+
+// раздельно 
+IMAGE_TAG=dev REGISTRY=ghcr.io LOGIN=p12s PROJECT=video-converter make dev-build-frontend
+IMAGE_TAG=dev REGISTRY=ghcr.io LOGIN=p12s PROJECT=video-converter make dev-build-api
+IMAGE_TAG=dev REGISTRY=ghcr.io LOGIN=p12s PROJECT=video-converter make dev-build-db
+
+// вместе
+IMAGE_TAG=dev REGISTRY=ghcr.io LOGIN=p12s PROJECT=video-converter make try-dev-build
+
+IMAGE_TAG=dev REGISTRY=ghcr.io LOGIN=p12s PROJECT=video-converter make try-dev-deploy
+
+==== PROD
+
+// раздельно
+IMAGE_TAG=v0.0.1 REGISTRY=ghcr.io LOGIN=p12s PROJECT=video-converter make build-prod-api
+IMAGE_TAG=v0.0.1 REGISTRY=ghcr.io LOGIN=p12s PROJECT=video-converter make push-prod-api
+
+// вместе
+IMAGE_TAG=v0.0.1 REGISTRY=ghcr.io LOGIN=p12s PROJECT=video-converter make try-build-prod
+
+IMAGE_TAG=v0.0.1 REGISTRY=ghcr.io LOGIN=p12s PROJECT=video-converter make try-push-prod
+
+HOST=your-url.com.com PORT=22 IMAGE_TAG=v0.0.1 REGISTRY=ghcr.io LOGIN=p12s PROJECT=video-converter make deploy-prod
+
+
+
+migrate -path="/migrations" -database="postgresql://postgres:YOUR-PASSWORD@127.0.0.1:5432/video?sslmode=disable" up
+  

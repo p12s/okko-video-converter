@@ -1,0 +1,15 @@
+---
+-   name: Install Docker SDK dependencies
+    become: yes
+    apt:
+        name:
+            - python-pip
+            - python-setuptools
+        state: present
+        update_cache: yes
+
+-   name: Install Docker SDK for Python
+    become: yes
+    pip:
+        name: 
+            - docker

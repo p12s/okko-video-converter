@@ -1,0 +1,10 @@
+---
+-   name: Put deploy authorized key
+    hosts: swarm-manager
+    remote_user: ubuntu
+    tasks:
+        -   name: Add user authorized key
+            become: yes
+            authorized_key:
+                user: deploy
+                key: "{{ lookup('file', 'files/deploy_rsa.pub') }}"

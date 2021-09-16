@@ -1,0 +1,10 @@
+---
+-   name: Create deploy user
+    become: yes
+    user:
+        name: deploy
+        password: '!'
+        groups:
+            - docker
+        shell: /bin/bash
+        state: present

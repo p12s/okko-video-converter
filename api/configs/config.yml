@@ -1,0 +1,12 @@
+port: "8081"
+
+db:
+  driver: "postgres"
+  username: "postgres"
+  host: "localhost"
+  #host: "db"
+  port: "5432"
+  dbname: "video"
+  sslmode: "disable"
+
+maxFileSizeInMb: 4096

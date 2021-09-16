@@ -1,0 +1,9 @@
+.navbar {
+  background-color: #E9F3FF;
+  height: 56px;
+  width: 100%;
+}
+.navbar__logo {
+  height: 56px;
+  max-width: 76px;
+}

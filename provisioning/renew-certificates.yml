@@ -1,0 +1,8 @@
+---
+-   name: Renew Certificates
+    hosts: swarm-manager
+    remote_user: ubuntu
+    tasks:
+        -   name: Renew certificates
+            become: yes
+            shell: "certbot renew"

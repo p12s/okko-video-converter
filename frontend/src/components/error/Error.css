@@ -1,0 +1,27 @@
+.error-container {
+  border-radius: 4px;
+  padding: 16px;
+  box-sizing: border-box;
+  font-size: 16px;
+  line-height: 1.4em;
+  background-color: #FFB82E;
+  margin: 24px;
+  position: relative;
+}
+.error-item {
+  color: #fff;
+  text-shadow: 0px 0px 2px #000;
+}
+.error-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  color: #fff;
+  border-top-right-radius: 4px;
+}
+.error-close:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}

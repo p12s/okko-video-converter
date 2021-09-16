@@ -1,0 +1,16 @@
+---
+-   name: Add authorized key
+    hosts: swarm-manager
+    remote_user: ubuntu
+    vars_prompt:
+        -   name: file
+            prompt: "Public key file"
+            private: no
+            default: "~/Dropbox/keys/p12s.online/id_rsa.pub"
+
+    tasks:
+        -   name: Add user authorized key
+            become: yes
+            authorized_key:
+                user: deploy
+                key: "{{ lookup('file', file) }}"
