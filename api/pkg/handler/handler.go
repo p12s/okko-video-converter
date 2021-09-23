@@ -17,8 +17,9 @@ func NewHandler(services *service.Service, broker *broker.Kafka) *Handler {
 
 func (h *Handler) InitRoutes() *gin.Engine {
 	router := gin.New()
-	router.MaxMultipartMemory = 21 << 20 // 21 MiB (default is 32 MiB)
 	router.Use(CORSMiddleware())
+	router.MaxMultipartMemory = 21 << 20 // 21 MiB (default is 32 MiB)
+
 	router.Static("/files", "/files") // отдача статических файлов, в нашем случае - загр. файлов
 	router.GET("/health", h.health)
 	router.GET("/ws", h.websocket)

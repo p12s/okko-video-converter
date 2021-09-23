@@ -4,18 +4,21 @@ A complete, cross-platform solution to record, convert and stream audio and vide
 
 ## Примеры команд
 ffmpeg [параметры входного кодирования] -i 1.mov [параметры выходного кодирования] 1.mp4  
-ffmpeg -i 1.mov -preset veryslow 1.mp4  
-ffmpeg -i 1.mov -preset slow 1.mkv  
+1) Сконвертировать из MOV в MP4 в наилучшем **качестве** с наименьшим **размером**, **время** не имеет значения:
+```
+ffmpeg -i 1.mov -preset veryslow 1.mp4
+```
+2) Сконвертировать в приемлемом **качестве**, но как можно **быстрее**:
+```
+ffmpeg -i 1.mov -preset medium 1.mkv  
+```
+3) Сделать **превьюшку** видео из первой **секунды шириной** 133px:
+```
+ffmpeg -i 1.mov -ss 00:00:01.000 -vframes 1 -filter:v scale='133:-1' 1.jpg
+```
 
 ## Наиболее популярные контейнеры
-mp4  
-avi  
-mpeg  
-mov  
-flv  
-webm  
-mkv   
-3gp  
+mp4, avi, mpeg, mov, flv, webm, mkv, 3gp  
 
 ## Вспомогательные инструменты
 FFplay - a simple media player based on SDL and the FFmpeg libraries.  

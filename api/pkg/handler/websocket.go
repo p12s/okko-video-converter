@@ -16,7 +16,6 @@ var upGrader = websocket.Upgrader{
 	},
 }
 
-
 func (h *Handler) websocket(c *gin.Context) {
 	ws, err := upGrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {

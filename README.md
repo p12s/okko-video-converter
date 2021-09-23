@@ -10,6 +10,10 @@
 Внешний вид:
 ![1](https://github.com/p12s/okko-video-converter/blob/master/screen-1.png?raw=true)
 ![2](https://github.com/p12s/okko-video-converter/blob/master/screen-2.png?raw=true)
+Запуск:
+```
+docker compose -f docker-compose.yml up (для тестирования нужно пофиксить CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource - это пока отложил)
+```
 
 ## Требования
 - ✅ Язык программирования: Go
@@ -17,7 +21,7 @@
 - ✅ Использование очередей MQ/**Kafka**
 
 ## Дополнительные задания
-- ❌ Инструкция по запуску на локале в Docker
+- ✅ Инструкция по запуску на локале в Docker
   **docker-compose**
 - ❌ Тесты 
   
