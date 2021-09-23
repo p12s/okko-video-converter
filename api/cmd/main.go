@@ -18,6 +18,14 @@ import (
 	"time"
 )
 
+// @title Video converter API
+// @version 0.0.1
+// @description API Server for Video Application
+// @host localhost:8081
+// @BasePath /
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func main() {
 	logrus.SetFormatter(new(logrus.JSONFormatter))
 	if err := initConfig(); err != nil {
@@ -67,11 +75,11 @@ func main() {
 
 	logrus.Print("🧟🧟🧟 Shutting Down 🧟🧟🧟")
 	if err := srv.Shutdown(context.Background()); err != nil {
-		logrus.Errorf("error occured on server shutting down: %s", err.Error())
+		logrus.Errorf("error occurred on server shutting down: %s", err.Error())
 	}
 
 	if err := db.Close(); err != nil {
-		logrus.Errorf("error occured on db connection close: %s", err.Error())
+		logrus.Errorf("error occurred on db connection close: %s", err.Error())
 	}
 }
 
@@ -82,6 +90,7 @@ func initConfig() error {
 	return viper.ReadInConfig()
 }
 
+// Server - сервер
 type Server struct {
 	httpServer *http.Server
 	kafka      *broker.Kafka
@@ -89,6 +98,7 @@ type Server struct {
 	closeC     chan struct{}
 }
 
+// Run - запуск сервера
 func (s *Server) Run(port string, handler http.Handler) error {
 	s.httpServer = &http.Server{
 		Addr:           ":" + port,
