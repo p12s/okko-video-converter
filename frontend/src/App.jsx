@@ -2,12 +2,14 @@ import React, {useState, useEffect} from 'react';
 import Navbar from './components/navbar/Navbar';
 import './styles/App.css';
 import Disk from './components/disk/Disk';
+import FormatSelect from './components/formatSelect/FormatSelect';
 import { UserContext } from './context';
 import { uploadFile, removeAll } from './actions/file';
 import {registerUser} from './actions/user';
 import {useDispatch} from 'react-redux';
 import {setUser} from "./reducers/userReducer";
 import Loader from './components/loader/Loader';
+import ControlGroup from './components/control-group/ControlGroup';
 
 function App() {
   // аутентификации в стандартном понимании нет,
@@ -16,6 +18,8 @@ function App() {
   const [token, setToken] = useState('')
   const dispatch = useDispatch()
   const [dragEnter, setDragEnter] = useState(false)
+  const [extension, setExtension] = useState('mp4')
+  const [extList] = useState(['mp4', 'avi', 'mpeg', 'mov', 'flv', 'webm', 'mkv', '3gp'])
 
   useEffect(() => {
     let token = localStorage.getItem('token')
@@ -28,7 +32,7 @@ function App() {
   function fileUploadHandler(event) {
     const files = [...event.target.files]
     removeAll()
-    files.forEach(file => dispatch(uploadFile(file)))
+    files.forEach(file => dispatch(uploadFile(file, extension)))
   }
 
   function checkRegisterHandler() {
@@ -53,14 +57,16 @@ function App() {
     event.preventDefault()
     event.stopPropagation()
     let files = [...event.dataTransfer.files]
-    files.forEach(file => dispatch(uploadFile(file)))
+    files.forEach(file => dispatch(uploadFile(file, extension)))
     setDragEnter(false)
   }
 
   return (
     <>
       <UserContext.Provider value={{
-        token, setToken
+        token, setToken,
+        extension, setExtension,
+        extList
       }}>
         <Navbar/>
         <Loader/>
@@ -71,8 +77,10 @@ function App() {
             </div>
             <div className="container df jc-c">
               <input onClick={checkRegisterHandler} onChange={(event) => fileUploadHandler(event)} id="upload-input" type="file" className="upload-input" multiple={false} />
-              <label htmlFor="upload-input" className="button button_primary m-12">Загрузить</label>
+              <label htmlFor="upload-input" className="button button_primary m-12">Загрузить и конвертировать в</label>
+              <FormatSelect/>
             </div>
+            <ControlGroup/>
             <Disk/>
           </div>
           :

@@ -17,7 +17,7 @@ func NewFilePostgres(db *sqlx.DB) *FilePostgres {
 
 func (r *FilePostgres) GetAll(userCode string) ([]common.File, error) {
 	var items []common.File
-	query := fmt.Sprintf(`SELECT f.path, f.name, f.user_id, f.kilo_byte_size, f.prev_image 
+	query := fmt.Sprintf(`SELECT f.path, f.name, f.user_id, f.kilo_byte_size, f.prev_image, f.status, f.error_message 
 									FROM %s f INNER JOIN %s u on u.id = f.user_id
 									WHERE u.code = $1`,
 		fileTable, usersTable)
@@ -40,11 +40,11 @@ func (r *FilePostgres) Create(files []common.UploadedFile, userCode string) erro
 		return nil
 	}
 
-	query := fmt.Sprintf("INSERT INTO %s (path, name, user_id, kilo_byte_size, prev_image) VALUES ", fileTable)
+	query := fmt.Sprintf("INSERT INTO %s (path, name, user_id, kilo_byte_size, prev_image, status) VALUES ", fileTable)
 
 	for i, item := range files {
-		query += fmt.Sprintf("('%s', '%s', (SELECT id FROM users WHERE code='%s'), %d, '%s')",
-			item.Path, item.Name, userCode, item.KiloByteSize, item.PrevImage)
+		query += fmt.Sprintf("('%s', '%s', (SELECT id FROM users WHERE code='%s'), %d, '%s', %d)",
+			item.Path, item.Name, userCode, item.KiloByteSize, item.PrevImage, common.STARTED)
 		if i < len(files)-1 {
 			query += ","
 		}
@@ -58,10 +58,30 @@ func (r *FilePostgres) Create(files []common.UploadedFile, userCode string) erro
 	return nil
 }
 
-func (r *FilePostgres) GetById(itemId int) error {
-	return nil
+func (r *FilePostgres) UpdateStatus(userCode, errorMess string, status common.ProcessStatus) error {
+	var query string
+	if errorMess != "" {
+		query = fmt.Sprintf(`UPDATE %s AS f SET status=$1, error_message=$2 FROM %s AS u WHERE f.user_id = u.id AND u.code = $3`,
+			fileTable, usersTable)
+	} else {
+		query = fmt.Sprintf(`UPDATE %s AS f SET status=$1, error_message=$2 FROM %s AS u WHERE f.user_id = u.id AND u.code = $3`,
+			fileTable, usersTable)
+	}
+
+	_, err := r.db.Exec(query, status, errorMess, userCode)
+
+	return err
 }
 
-func (r *FilePostgres) Delete(itemId int) error {
-	return nil
+func (r *FilePostgres) GetByCode(userCode string) (common.File, error) {
+	var item common.File
+	query := fmt.Sprintf(`SELECT f.path, f.name, f.user_id, f.kilo_byte_size, f.prev_image, f.status 
+									FROM %s f INNER JOIN %s u on u.id = f.user_id
+									WHERE u.code = $1`,
+		fileTable, usersTable)
+	if err := r.db.Get(&item, query, userCode); err != nil {
+		return item, err
+	}
+
+	return item, nil
 }

@@ -21,17 +21,14 @@ func (s *FileService) DeleteAll(userCode string) error {
 	return s.repo.DeleteAll(userCode)
 }
 
-// Create - создание
 func (s *FileService) Create(files []common.UploadedFile, userCode string) error {
 	return s.repo.Create(files, userCode)
 }
 
-// GetById - получение по id
-func (s *FileService) GetById(itemId int) error {
-	return s.repo.GetById(itemId)
+func (s *FileService) UpdateStatus(userCode, errorMess string, status common.ProcessStatus) error {
+	return s.repo.UpdateStatus(userCode, errorMess, status)
 }
 
-// Delete - удаление
-func (s *FileService) Delete(itemId int) error {
-	return s.repo.Delete(itemId)
+func (s *FileService) GetByCode(userCode string) (common.File, error) {
+	return s.repo.GetByCode(userCode)
 }

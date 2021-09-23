@@ -7,9 +7,8 @@ import (
 )
 
 const (
-	usersTable         = "users"
-	fileTable          = "file"
-	resizeOptionsTable = "resize_options"
+	usersTable = "users"
+	fileTable  = "file"
 )
 
 type Config struct {

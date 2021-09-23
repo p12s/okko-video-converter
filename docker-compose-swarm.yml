@@ -83,6 +83,45 @@ services:
             - postgres_user
             - postgres_db
 
+    zookeeper:
+        image: wurstmeister/zookeeper:latest
+        hostname: zookeeper
+        ports:
+            - "2181:2181" # только для отладки - на проде без портов, чтоб не достучаться
+
+    kafka:
+        image: wurstmeister/kafka:latest
+        hostname: kafka
+        ports:
+            - "9094:9092"
+            - "9092:9092"
+#            - target: 9094
+#              published: 9094
+#              protocol: tcp
+#              mode: host
+        environment:
+            #HOSTNAME_COMMAND: "hostname | echo kafka"
+            KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:9094
+            #KAFKA_CREATE_TOPICS: notification:1:1 # notification:1:1,other_topic:1:1 -  должны создаться топики без всяких ограничений по времени  и размеру
+            #KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://_{HOSTNAME_COMMAND}:9094
+            KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka:19092,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:9092
+            #KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+            #KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+            KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
+            #KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+            KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+            KAFKA_BROKER_ID: 1
+            #KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+            #KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+            #KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+            #KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+            #KAFKA_JMX_PORT: 9999
+            #KAFKA_JMX_HOSTNAME: ${DOCKER_HOST_IP:-127.0.0.1}
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+            - ./zk-single-kafka-single/kafka1/data:/var/lib/kafka/data
+
 volumes:
     files:
 

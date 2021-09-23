@@ -11,9 +11,6 @@ const File = ({file}) => {
   if (file.kilo_byte_size) {
     megaByteSize = Math.round(file.kilo_byte_size / 1024, 2)
   }
-  if (file.prev_image === "") {
-    file.prev_image = 'https://placehold.co/133x100/random/random'
-  }
   let videoType = 'video/' + fileExtension.toLowerCase()
 
   return (

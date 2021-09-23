@@ -1,9 +1,9 @@
 package common
 
-type ResizeStatus int
+type ProcessStatus int
 
 const (
-	CREATED ResizeStatus = iota
+	CREATED ProcessStatus = iota
 	STARTED
 	FINISHED
 	ERROR

@@ -30,6 +30,8 @@ func RunCli(command, arguments string) (string, error) {
 
 	cmd.Wait()
 
+	fmt.Println(command, arguments)
+
 	if strings.Contains(errMessage, "Conversion failed") {
 		fmt.Println("CMD ERROR:")
 		fmt.Println(errMessage)

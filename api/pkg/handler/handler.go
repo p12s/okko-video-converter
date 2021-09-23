@@ -2,26 +2,26 @@ package handler
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/p12s/okko-video-converter/api/pkg/broker"
 	"github.com/p12s/okko-video-converter/api/pkg/service"
 )
 
 type Handler struct {
 	services *service.Service
+	broker   *broker.Kafka
 }
 
-func NewHandler(services *service.Service) *Handler {
-	return &Handler{services: services}
+func NewHandler(services *service.Service, broker *broker.Kafka) *Handler {
+	return &Handler{services: services, broker: broker}
 }
 
 func (h *Handler) InitRoutes() *gin.Engine {
 	router := gin.New()
+	router.MaxMultipartMemory = 21 << 20 // 21 MiB (default is 32 MiB)
 	router.Use(CORSMiddleware())
-	router.Static("/files", "/files") // отдача статических файлов, в нашем случае - загр. картинок
-
-	// Set a lower memory limit for multipart forms (default is 32 MiB)
-	router.MaxMultipartMemory = 21 << 20 // 21 MiB
-
+	router.Static("/files", "/files") // отдача статических файлов, в нашем случае - загр. файлов
 	router.GET("/health", h.health)
+	router.GET("/ws", h.websocket)
 	router.POST("/api/registerUser", h.registerUser)
 
 	api := router.Group("/api/v1", h.userIdentity)
@@ -29,10 +29,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		api.GET("/files", h.files)
 		api.POST("/upload", h.upload)
 		api.GET("/removeAll", h.removeAll)
-		api.POST("/updateResizeOptions", h.updateResizeOptions) //POST как с фронта отправлять данные
-		api.POST("/resize", h.resize)
 		api.GET("/download", h.download)
-		api.GET("/getResizeProgress", h.getResizeProgress)
 	}
 
 	return router

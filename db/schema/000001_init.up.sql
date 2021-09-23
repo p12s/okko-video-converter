@@ -1,12 +1,12 @@
--- БД должна быть создана заранее (вручную), т.к. в скрипте закуска указывается ее название
---CREATE DATABASE "video" WITH OWNER "postgres" ENCODING 'UTF8' LC_COLLATE = 'ru_RU.UTF-8' LC_CTYPE = 'ru_RU.UTF-8';
+SET timezone = 'Europe/Moscow';
+-- SHOW TIMEZONE;
 
-CREATE TABLE IF NOT EXISTS file
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+CREATE TABLE IF NOT EXISTS users
 (
-    id              serial       not null unique,
-    path            varchar(500) not null,
-    name            varchar(300) not null,
-    user_id         int references users (id) on delete cascade on update cascade not null,
-    kilo_byte_size  int not null
+    id serial not null unique,
+    code uuid NOT NULL DEFAULT uuid_generate_v4()
 );
--- DROP TABLE IF EXISTS file CASCADE;
+-- DROP TABLE IF EXISTS users CASCADE;
+

@@ -4,11 +4,10 @@ import { config } from '../config';
 import { registerUser } from './user';
 
 import { showLoader, hideLoader, changeLoader } from "../reducers/loaderReducer";
-import { showProgress, hideProgress, changeProgress } from "../reducers/progressReducer";
-import { replaceFile } from "../reducers/fileReducer"; // TODO когда не нужно будет перезаписывать, а просто добавлять - addFile
+import { showProgress, hideProgress } from "../reducers/progressReducer";
+import { replaceFile, removeFile } from "../reducers/fileReducer"; // TODO когда не нужно будет перезаписывать, а просто добавлять - addFile
 import { showCreateButton } from '../reducers/createButtonReducer';
 import { showDownloadButton } from '../reducers/downloadButtonReducer';
-import { showDimensions } from '../reducers/dimensionsReducer';
 import { changeImageSize } from '../reducers/imageSizeReducer';
 
 export const getFiles = () => {
@@ -28,7 +27,6 @@ export const getFiles = () => {
               imageWidth: response.data[0].width,
               imageHeight: response.data[0].height,
             }))
-            dispatch(showDimensions())
           }
           dispatch(setFiles(response.data))
         }
@@ -41,8 +39,37 @@ export const getFiles = () => {
   }
 }
 
+function connectToWebsocket(dispatch) {
+  let tokenStr = localStorage.getItem('token')
+  if (tokenStr === null) {
+    console.log('Cannot sent ws request - token not exist')
+    return
+  }
+
+  var ws = new WebSocket(`${config.WS_URL}/api/ws`);
+  
+  ws.onopen = function (event) {
+    ws.send(JSON.stringify({ token: tokenStr }))
+  };
+  
+  ws.onmessage = function (event) {
+    let json = JSON.parse(event.data)
+    if(json.hasOwnProperty('status') && json['status'] == 2){
+      dispatch(showDownloadButton())
+      dispatch(replaceFile(json))
+    } else {
+      console.log('Error from websocket')
+    }
+    console.log(json)
+  };
+  
+  ws.onclose = function (event) {
+    dispatch(hideProgress())
+  };
+}
+
 // Загрузка файла на сервер - отрабатывает на каждый файл
-export const uploadFile = (file) => {
+export const uploadFile = (file, extension) => {
   return async dispatch => {
       try {
           let token = localStorage.getItem('token')
@@ -52,36 +79,34 @@ export const uploadFile = (file) => {
 
           const formData = new FormData()
           formData.append('files', file)
+          formData.append('extension', extension)
 
           const loaderProgress = {progress: 0}
           dispatch(showLoader())
           dispatch(changeLoader(loaderProgress))
-          
-          console.log('upload file start')
+          dispatch(removeFile())
+
           const response = await axios.post(`${config.API_URL}/api/v1/upload`, formData, {
             headers: {Authorization: `Bearer ${localStorage.getItem('token')}`},
             onUploadProgress: progressEvent => {
               const totalLength = progressEvent.lengthComputable ? progressEvent.total : progressEvent.target.getResponseHeader('content-length') || progressEvent.target.getResponseHeader('x-decompressed-content-length');
               if (totalLength) {
                 loaderProgress.progress = Math.round((progressEvent.loaded * 100) / totalLength)
-                console.log(loaderProgress.progress)
+                // здесь приходят % загрузки файла на сервер
                 dispatch(changeLoader(loaderProgress))
               }
             }
           })
-          if (response.status === 200) {
-            console.log('should be end')
-          }
 
           if (response.status !== 200) {
-            console.log('взникла ошибка при загрузке файла:')
+            console.log('возникла ошибка при загрузке файла:')
             console.log(response)
             // TODO вывод текста ошибки в интерфейсе
+          } else {
+            dispatch(showProgress())
+            connectToWebsocket(dispatch)
           }
-
           dispatch(hideLoader())
-          //dispatch(addFile(response.data.files[0])) - для множественной загрузки, пока не надо
-          dispatch(replaceFile(response.data.files[0]))
       } catch (e) {
         alert(e)
       }
@@ -112,37 +137,6 @@ export async function downloadFile() {
   }
 }
 
-// TODO возврат ответа ОК - что запустилась нарезка
-// Запуск нарезки/webp-конвертаци/архивации картинок
-export const updateResizeOptions = (widthList, coefList, isAddWebp, isCompressImage) => {
-  return async dispatch => {
-    try {
-      let postData = {
-        'widthList': widthList,
-        'coefList': coefList,
-        'isAddWebp': isAddWebp,
-        'isCompress': isCompressImage
-      }
-
-      const response = await axios.post(`${config.API_URL}/api/v1/updateResizeOptions`, postData, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      })
-
-      if (response.status === 200) {
-        dispatch(showProgress())
-        //dispatch(resize()) EventSourse
-        setTimeout(() => dispatch(getResizeProgress()), 1000);
-      }
-
-    } catch (e) {
-      console.log(e)
-      dispatch(hideProgress())
-      alert(e)
-      // TODO вывод текста ошибки в интерфейсе
-    }
-  }
-}
-
 export const removeAll = () => {
   return async dispatch => {
     try {
@@ -156,92 +150,12 @@ export const removeAll = () => {
         });
 
         if (response.status !== 200) {
-          console.log('возникла ошибка при загрузке файла:')
+          console.log('возникла ошибка при удалении файлов:')
           console.log(response)
           // TODO вывод текста ошибки в интерфейсе
         } else {
           console.log('remove all')
         }
-    } catch (e) {
-      alert(e)
-    }
-  }
-}
-
-export const resize = () => {
-  return async dispatch => {
-    try {
-      let token = localStorage.getItem('token')
-      if (token === null) {
-        return
-      }
-    
-      const eventSourse = new EventSource(`${config.API_URL}/api/v1/resize/${localStorage.getItem('token')}`)
-
-      eventSourse.onmessage = function (event) {
-        const message = JSON.parse(event.data)
-
-        if (message.Current === message.Total) {
-          eventSourse.close();
-          dispatch(hideProgress())
-          dispatch(showCreateButton())
-          dispatch(showDownloadButton())
-        }
-
-        let progressPercent = Math.round((message.Current * 100)/message.Total)
-        if (progressPercent > 100) {
-          progressPercent = 100
-        }
-        console.log(progressPercent)
-        dispatch(changeProgress({progress: progressPercent}))
-      }
-      eventSourse.onerror = function (event) {
-        console.log('error and close stream:')
-        console.log(event)
-        eventSourse.close();
-        dispatch(hideProgress())
-        dispatch(showCreateButton())
-        dispatch(showDownloadButton())
-      }
-    } catch (e) {
-      alert(e)
-    }
-  }
-}
-
-export const getResizeProgress = () => {
-  return async dispatch => {
-    try {
-      let token = localStorage.getItem('token')
-      if (token === null) {
-        return
-      }
-
-      const response = await axios.get(`${config.API_URL}/api/v1/getResizeProgress`, {
-        headers: {Authorization: `Bearer ${localStorage.getItem('token')}`}
-      });
-
-      if (response.status === 200) {
-        if (response.data.hasOwnProperty('progress')) {
-          let progress = parseInt(response.data.progress)
-          console.log(progress)
-
-          if (progress >= 0 && progress < 100) {
-            dispatch(changeProgress({progress: progress})) 
-            setTimeout(() => dispatch(getResizeProgress()), 1000);
-
-          } else if (progress === 100) {
-            dispatch(hideProgress())
-            dispatch(showCreateButton())
-            dispatch(showDownloadButton())
-
-          } else {
-            console.log('Error progress:')
-            console.log(response)
-          }
-        }
-      }
-
     } catch (e) {
       alert(e)
     }

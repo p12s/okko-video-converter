@@ -3,7 +3,18 @@ port: "8081"
 db:
   driver: "postgres"
   username: "postgres"
-  host: "db"
+  host: "localhost"
+  #host: "db"
   port: "5432"
-  dbname: "postgres"
+  dbname: "video"
   sslmode: "disable"
+
+maxFileSizeInMb: 4096
+maxVideoProcessTimeInMin: 10
+
+kafka:
+  host: "localhost"
+  port: "9092"
+  minBytes: 10240     # 10Kb
+  maxBytes: 10485560  # 10Mb
+  topic: "testing.logging.docker" #"okko.video-converter.task"

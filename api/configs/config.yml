@@ -10,3 +10,11 @@ db:
   sslmode: "disable"
 
 maxFileSizeInMb: 4096
+maxVideoProcessTimeInMin: 10
+
+kafka:
+  host: "localhost"
+  port: "9092"
+  minBytes: 10240     # 10Kb
+  maxBytes: 10485560  # 10Mb
+  topic: "testing.logging.docker" #"okko.video-converter.task"

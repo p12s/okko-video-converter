@@ -2,19 +2,20 @@ package main
 
 import (
 	"context"
-	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
-
+	"errors"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"github.com/p12s/okko-video-converter/api/pkg/broker"
 	"github.com/p12s/okko-video-converter/api/pkg/handler"
 	"github.com/p12s/okko-video-converter/api/pkg/repository"
 	"github.com/p12s/okko-video-converter/api/pkg/service"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 func main() {
@@ -42,7 +43,14 @@ func main() {
 	// инит клин (репо-сервис-хендлер)
 	repos := repository.NewRepository(db)
 	services := service.NewService(repos)
-	handlers := handler.NewHandler(services)
+
+	kafka, err := broker.NewKafka()
+	if err != nil {
+		logrus.Fatalf("❌ kafka error: %s\n", err.Error())
+	}
+	go broker.Subscribe(kafka.Consumer, repos)
+
+	handlers := handler.NewHandler(services, kafka)
 
 	// ран сервер
 	srv := new(Server)
@@ -51,14 +59,13 @@ func main() {
 			logrus.Fatalf("error while running http server: %s\n", err.Error())
 		}
 	}()
-	logrus.Print("😀😀😀 video started 😀😀😀")
+	logrus.Print("😀😀😀 service started 😀😀😀")
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
 	<-quit
 
-	logrus.Print("🧟🧟🧟 video Shutting Down 🧟🧟🧟")
-
+	logrus.Print("🧟🧟🧟 Shutting Down 🧟🧟🧟")
 	if err := srv.Shutdown(context.Background()); err != nil {
 		logrus.Errorf("error occured on server shutting down: %s", err.Error())
 	}
@@ -66,7 +73,6 @@ func main() {
 	if err := db.Close(); err != nil {
 		logrus.Errorf("error occured on db connection close: %s", err.Error())
 	}
-
 }
 
 // initConfig - инициализация конфигов из configs/config
@@ -78,6 +84,9 @@ func initConfig() error {
 
 type Server struct {
 	httpServer *http.Server
+	kafka      *broker.Kafka
+	doneC      chan struct{}
+	closeC     chan struct{}
 }
 
 func (s *Server) Run(port string, handler http.Handler) error {
@@ -93,5 +102,14 @@ func (s *Server) Run(port string, handler http.Handler) error {
 
 // Shutdown - grace-full-выключение
 func (s *Server) Shutdown(ctx context.Context) error {
-	return s.httpServer.Shutdown(ctx)
+	close(s.closeC)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return errors.New("context.Done")
+		case <-s.doneC:
+			return nil
+		}
+	}
 }

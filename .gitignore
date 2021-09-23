@@ -20,6 +20,10 @@ configs/config.yml
 .database/
 api/files
 secrets/production
+frontend/.vscode
+
+zk-single-kafka-single/
+zk-*
 
 # User-specific stuff
 .idea/**/workspace.xml
